@@ -1,0 +1,180 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(22, 23, 24, 25, 26, 27);
+
+int GREEN = 53;
+int YELLOW = 52;
+int RED = 51;
+int BUTTON = 50;
+int timer = 0;
+int porta[7] = {37, 36, 35, 34, 33, 32, 31};
+
+
+void setup() {
+
+   pinMode(GREEN, OUTPUT);
+   pinMode(YELLOW, OUTPUT);
+   pinMode(RED, OUTPUT);
+   
+   for (int j = 0 ; j < 7 ; j++){
+      pinMode( porta[j], OUTPUT);
+   }
+   
+   // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  // Print a message to the LCD
+  lcd.print("");
+  
+   // initialize timer1
+   noInterrupts(); // disable all interrupts
+   TCCR1A = 0;
+   TCCR1B = 0;
+   
+   TCNT1 = 34286; // preload timer 65536-16MHz/256/2Hz
+   TCCR1B |= (1 << CS12); // 256 prescaler
+   TIMSK1 |= (1 << TOIE1); // enable timer overflow interrupt
+   interrupts(); // enable all interrupts
+}
+
+ISR(TIMER1_OVF_vect) // interrupt service routine
+{
+   TCNT1 = 34286; // preload timer again
+   timer++;
+   
+}
+
+void loop() {
+
+   if(digitalRead(BUTTON) == 1) {
+      change_light();
+      }
+      
+   else {
+      switch(timer) {
+	 case 1 :
+	    red_light();
+	    break;
+	 
+	 case 10 :
+	    yellow_light();
+	    lcd.clear();
+	    lcd.print("WAIT"); 
+	    break;
+	 
+	 case 16 :
+	    green_light();
+	    lcd.clear();
+	    lcd.print("GO!!"); 
+	    break;
+	 
+	 case 24 :
+	    no_light();
+	    lcd.clear();
+	    delay(750);
+	    timer = 0;
+	    break;
+	    }
+      }
+}
+
+void change_light() {
+   yellow_light();
+   delay(1000);
+   red_light();
+   
+   BUTTON = 0;
+   timer = 0;
+}
+
+void no_light() {
+  digitalWrite(GREEN, LOW);
+  digitalWrite(YELLOW, LOW);
+  digitalWrite(RED, LOW);
+}
+
+void red_light() {
+  digitalWrite(GREEN, LOW);
+  digitalWrite(YELLOW, LOW);
+  digitalWrite(RED, HIGH);
+  lcd.clear();
+  lcd.print("STOP"); 
+  seg(4);
+}
+
+void yellow_light() {
+  digitalWrite(GREEN, LOW);
+  digitalWrite(YELLOW, HIGH);
+  digitalWrite(RED, LOW);
+  lcd.clear();
+  lcd.print("WAIT"); 
+  seg(2);
+}
+
+void green_light() {
+  digitalWrite(GREEN, HIGH);
+  digitalWrite(YELLOW, LOW);
+  digitalWrite(RED, LOW);
+  lcd.clear();
+  lcd.print("GO!!"); 
+  seg(3);
+}
+
+void seg(int num) {
+   for (int count = num  ; count >= 0 ; count--) {
+      switch(count) {
+  case 0 :
+  digitalWrite(porta[0], 0);
+  digitalWrite(porta[1], 1);
+  digitalWrite(porta[2], 1);
+  digitalWrite(porta[3], 0);
+  digitalWrite(porta[4], 0);
+  digitalWrite(porta[5], 0);
+  digitalWrite(porta[6], 0);
+  delay(750);
+  break;
+  
+  case 1 :
+  digitalWrite(porta[0], 1);
+  digitalWrite(porta[1], 1);
+  digitalWrite(porta[2], 0);
+  digitalWrite(porta[3], 1);
+  digitalWrite(porta[4], 1);
+  digitalWrite(porta[5], 0);
+  digitalWrite(porta[6], 1);
+  delay(750);
+  break;
+  
+  case 2 :
+  digitalWrite(porta[0], 1);
+  digitalWrite(porta[1], 1);
+  digitalWrite(porta[2], 1);
+  digitalWrite(porta[3], 1);
+  digitalWrite(porta[4], 0);
+  digitalWrite(porta[5], 0);
+  digitalWrite(porta[6], 1);
+  delay(750);
+  break;
+  
+  case 3 :
+  digitalWrite(porta[0], 0);
+  digitalWrite(porta[1], 1);
+  digitalWrite(porta[2], 1);
+  digitalWrite(porta[3], 0);
+  digitalWrite(porta[4], 0);
+  digitalWrite(porta[5], 1);
+  digitalWrite(porta[6], 1);
+  delay(750);
+  break;
+  
+  case 4 :
+  digitalWrite(porta[0], 1);
+  digitalWrite(porta[1], 0);
+  digitalWrite(porta[2], 1);
+  digitalWrite(porta[3], 1);
+  digitalWrite(porta[4], 0);
+  digitalWrite(porta[5], 1);
+  digitalWrite(porta[6], 1);
+  delay(750);
+  break;
+      }
+   }
+}
